@@ -134,7 +134,7 @@ public class UGzkoSegmentSymmetryc
 			theSession = Session.GetSession();
 			workPart = theSession.Parts.Work;
 			theUI = UI.GetUI();
-			theDlxFileName = "d:\\NXJournal\\UGzkoSegmentSymmetryc.dlx";
+			theDlxFileName = "D:\\NXJournal\\NXplugin\\DLX\\UGzkoSegmentSymmetryc.dlx";
 			theDialog = theUI.CreateDialog(theDlxFileName);
 			theDialog.AddApplyHandler(new NXOpen.BlockStyler.BlockDialog.Apply(apply_cb));
 			theDialog.AddOkHandler(new NXOpen.BlockStyler.BlockDialog.Ok(ok_cb));

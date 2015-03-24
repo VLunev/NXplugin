@@ -203,7 +203,7 @@ public class UGzkoGroupIntersecLines
             theSession = Session.GetSession();
 			workPart = theSession.Parts.Work;
             theUI = UI.GetUI();
-            theDlxFileName = "d:\\NXJournal\\UGzkoGroupIntersecLines.dlx";
+            theDlxFileName = "D:\\NXJournal\\NXplugin\\DLX\\UGzkoGroupIntersecLines.dlx";
             theDialog = theUI.CreateDialog(theDlxFileName);
             theDialog.AddOkHandler(new NXOpen.BlockStyler.BlockDialog.Ok(ok_cb));
             theDialog.AddFilterHandler(new NXOpen.BlockStyler.BlockDialog.Filter(filter_cb));

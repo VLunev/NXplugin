@@ -201,7 +201,7 @@
 		</PropertyList>
 	</item>
 	<PropertyList id="id" mode="0">
-		<Property id="Title" mask="0" name="Title" type="utfstring" group="General::" sname="Label" value="Нет названия111" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::Styler::DialogItem"/>
+		<Property id="Title" mask="0" name="Title" type="utfstring" group="General::" sname="Label" value="Множественные пересечения" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::Styler::DialogItem"/>
 		<Property id="Visibility" mask="0" name="Visibility" type="logical" group="General::" sname="Show" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::Styler::DialogItem"/>
 		<Property id="Sensitivity" mask="0" name="Sensitivity" type="logical" group="General::" sname="Enable" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::Styler::DialogItem"/>
 		<Property id="Cue" mask="0" name="Cue" type="utfstring" group="General::" sname="Cue" value="" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::Styler::DialogItem"/>

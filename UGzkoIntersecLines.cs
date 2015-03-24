@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using NXOpen;
 using NXOpen.BlockStyler;
 
@@ -190,7 +191,7 @@ public class UGzko2
 			theSession = Session.GetSession();
 			workPart = theSession.Parts.Work;
 			theUI = UI.GetUI();
-			theDlxFileName = "d:\\NXJournal\\UGzkoIntersecLines.dlx";
+			theDlxFileName = "D:\\NXJournal\\NXplugin\\DLX\\UGzkoIntersecLines.dlx";
 			theDialog = theUI.CreateDialog(theDlxFileName);
 			theDialog.AddApplyHandler(new NXOpen.BlockStyler.BlockDialog.Apply(apply_cb));
 			theDialog.AddOkHandler(new NXOpen.BlockStyler.BlockDialog.Ok(ok_cb));
