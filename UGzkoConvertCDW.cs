@@ -127,7 +127,7 @@ public class NXJournal
 	//string filename = CreateFirstDialog();
 	//if (filename == "") return;
 	//return;	
-	txtfile = new System.IO.StreamWriter(@"C:\111\111234.txt", false);
+	txtfile = new System.IO.StreamWriter(@"d:\2d.txt", false);
 	txtfile.AutoFlush = false;
 
 	LW.WriteLine("START...");
@@ -135,18 +135,11 @@ public class NXJournal
 	bool bNone;
 	foreach (NXOpen.Drawings.DrawingSheet sheet in workPart.DrawingSheets)
 	{
-			PrintSTR("LISTNAME: " + sheet.Name);
-			PrintSTR("LIST_WIDTH: " + sheet.Length.ToString());
-			PrintSTR("LIST_HEIGHT: " + sheet.Height.ToString());
-			PrintSTR("CREATELIST");
-			
-			
+			PrintSTR(String.Format("CREATELIST: \"{0}\"; {1}; {2}", sheet.Name, sheet.Length, sheet.Height));
+
 			foreach (NXOpen.Drawings.DraftingView view in sheet.SheetDraftingViews)
 			{
-				PrintSTR(view.Matrix.ToString());
-				PrintSTR("VIEWNAME: " + view.Name);
-				PrintSTR("VIEW_M: " + view.Scale.ToString());
-				PrintSTR("CREATEVIEW");
+				PrintSTR(String.Format("CREATEVIEW: \"{0}\"; {1}", view.Name, view.Scale));
 				
 				foreach (DisplayableObject obj in view.AskVisibleObjects())
 				{
@@ -183,6 +176,9 @@ public class NXJournal
 					
 					
 /*
+CREATELIST: "Sheet 4"; 1189; 841				имя, длина, высота
+CREATEVIEW: "Front@23"; 0,00474517367052386		имя, масштаб
+Point: 1; 0; 0							'x,y
 LINE: 1, 100, 100, 200, 200				'стиль,x1,y1,x2,y2
 CIRCLE: 1, 100, 100, 20					'стиль,x1,y1,r
 ARC: 1, 100, 100, 200, 200, 20			'стиль,CenterX,CenterY,Radius,StartAngle,EndAngle
