@@ -89,12 +89,12 @@ public class NXJournal
 	{
 		if (obj.LineWidth == DisplayableObject.ObjectWidth.Normal) return 1;
 		if (obj.LineWidth == DisplayableObject.ObjectWidth.Six) return 2;
-		return 1;
+		return 0;
 	}
 	
 	public static void PrintSTR(string s)
 	{
-		//LW.WriteLine(s);
+		LW.WriteLine(s);
 		if (txtfile != null) txtfile.WriteLine(s);
 	}
 	
@@ -139,12 +139,13 @@ public class NXJournal
 
 			foreach (NXOpen.Drawings.DraftingView view in sheet.SheetDraftingViews)
 			{
-				PrintSTR(String.Format("CREATEVIEW: \"{0}\"; {1}", view.Name, view.Scale));
-				
-				foreach (DisplayableObject obj in view.AskVisibleObjects())
+				PrintSTR(String.Format("CREATEVIEW: \"{0}\"; {1}", view.Name, view.Style.General.Scale));	//view.Scale отвечает за отображение на экране
+
+				foreach (NXOpen.Drawings.DraftingBody obj in view.DraftingBodies)
 				{
 					bNone = false;
-					if (obj is NXOpen.Point) 
+					PrintSTR(obj.ToString());
+					/*if (obj is NXOpen.Point) 
 					{
 						NXOpen.Point point = (NXOpen.Point)obj;
 						//lw.WriteLine("Line: " + point.Coordinates.X.ToString() + ", " + point.Coordinates.Y.ToString());
@@ -154,7 +155,7 @@ public class NXJournal
 					if (obj is NXOpen.Line) 
 					{
 						NXOpen.Line line = (NXOpen.Line)obj;
-						PrintSTR(String.Format("LINE: {0}; {1}; {2}; {3}; {4}", GetKompasObjStyle(obj), GetX(view, line.StartPoint), GetY(view, line.StartPoint), GetX(view, line.EndPoint), GetY(view, line.EndPoint)));
+						PrintSTR(String.Format("LINE: {0}; {1}; {2}; {3}; {4}", obj.LineWidth.ToString(), GetX(view, line.StartPoint), GetY(view, line.StartPoint), GetX(view, line.EndPoint), GetY(view, line.EndPoint)));
 						bNone = true;
 					}
 					if (obj is NXOpen.Arc) 
@@ -171,8 +172,8 @@ public class NXJournal
 					}
 					if (!bNone)
 					{
-						PrintSTR("\t\tОбъект: " + obj.GetType().Name);
-					}
+						PrintSTR("NONE: " + obj.GetType().Name);
+					}*/
 					
 					
 /*
