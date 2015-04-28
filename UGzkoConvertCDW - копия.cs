@@ -201,42 +201,24 @@ public class NXJournal
 		return ang*180/Math.PI;
 	}
 	
-	public static int GetMatrixDirection4(UFSession ufs, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
-	{
-		//считаем что nx нас не обманывает и определители матриц равны 1
-		//считаем что вектор Z вида и вектор Z дуги 	коллинеарны
-		//за направление следует принять один из векторов Z
-
-		double [] vecX_view = {viewM.Xx, viewM.Xy, viewM.Xz};
-		double [] vecZ_view = {viewM.Zx, viewM.Zy, viewM.Zz};
-		double [] vecZ_arc  = {arcM.Zx,  arcM.Zy,  arcM.Zz};
-		double angZ;
-		ufs.Vec3.AngleBetween(vecZ_view, vecZ_arc, vecX_view, out angZ);
-		if (angZ > 0.000001) return -1;
-		return 1;
-	}
-	
-	public static double convertANG_ABStoCSYS(UFSession ufs, double ang, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
+	public static double GetMatrixDirection4(UFSession ufs, double ang, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
 	{
 		double [] uf_viewM = convert_Matrix3x3_to_UFMatrix(viewM);
 		double [] uf_arcM  = convert_Matrix3x3_to_UFMatrix(arcM);
-		//double [] uf_arcM_T = new double[9]; 
-		//double [] uf_M = new double[9]; 
-		//ufs.Mtx3.Transpose(uf_arcM, uf_arcM_T);
-		//ufs.Mtx3.Multiply(uf_viewM, uf_arcM_T, uf_M);
+		double [] uf_arcM_T = new double[9]; 
+		double [] uf_M = new double[9]; 
+		ufs.Mtx3.Transpose(uf_arcM, uf_arcM_T);
+		ufs.Mtx3.Multiply(uf_viewM, uf_arcM_T, uf_M);
 		
 		double [] model_pt = {Math.Cos(ang), Math.Sin(ang), 0};
 		double [] result = {0,0,0};
 		ufs.Mtx3.VecMultiplyT(model_pt, uf_arcM, result);
 		ufs.Mtx3.VecMultiply(result, uf_viewM, result);
 		//ufs.Mtx3.VecMultiply(result, uf_viewM, result);
-		//PrintSTR("x = " + result[0] + "\t\t Acos=" + Math.Acos(result[0])*180/Math.PI+ "\t Asin=" + Math.Asin(result[0])*180/Math.PI);
-		//PrintSTR("y = " + result[1] + "\t\t Acos=" + Math.Acos(result[1])*180/Math.PI+ "\t Asin=" + Math.Asin(result[1])*180/Math.PI);
-		//PrintSTR("z = " + result[2] + "\t\t Acos=" + Math.Acos(result[2])*180/Math.PI+ "\t Asin=" + Math.Asin(result[2])*180/Math.PI);
-		int znak = 1;
-		//if ((Math.Abs(Math.Acos(result[0]) - Math.Asin(result[1])) > 0.000001) && (Math.Abs(Math.Acos(result[0]) + Math.Asin(result[1]) - 180) < 0.000001)) znak = -1;			//в обратную сторону по тригонометрии
-		if (result[1] < 0) znak = -1;
-		return znak * Math.Acos(result[0]);
+		PrintSTR("x = " + result[0] + "\t\t Acos=" + Math.Acos(result[0])*180/Math.PI+ "\t Asin=" + Math.Asin(result[0])*180/Math.PI);
+		PrintSTR("y = " + result[1] + "\t\t Acos=" + Math.Acos(result[1])*180/Math.PI+ "\t Asin=" + Math.Asin(result[1])*180/Math.PI);
+		PrintSTR("z = " + result[2] + "\t\t Acos=" + Math.Acos(result[2])*180/Math.PI+ "\t Asin=" + Math.Asin(result[2])*180/Math.PI);
+		return ang*180/Math.PI;
 	}
 	
 	public static double [] convert_Matrix3x3_to_UFMatrix(NXOpen.Matrix3x3 M)
@@ -309,7 +291,12 @@ public class NXJournal
 					if (obj is NXOpen.Line) 
 					{
 						NXOpen.Line line = (NXOpen.Line)obj;
+						//PrintSTR(String.Format("LINE: {0}; {1}; {2}; {3}; {4}", GetKompasObjStyle(obj), GetX(view, line.StartPoint), GetY(view, line.StartPoint), GetX(view, line.EndPoint), GetY(view, line.EndPoint)));
 						bNone = true;
+				/*double [] model_pt = {line.StartPoint.X, line.StartPoint.Y, line.StartPoint.Z};
+				double [] result = {0,0};
+				ufs.View.MapModelToDrawing(view.Tag,model_pt, result);
+				PrintSTR("MapModelToDrawing = "+result[0].ToString()+"     "+result[1].ToString());*/
 						NXOpen.Point3d startP = convertCoord_CSYStoABS(ufs, line.StartPoint, view.Matrix);
 						NXOpen.Point3d   endP = convertCoord_CSYStoABS(ufs, line.EndPoint,   view.Matrix);
 						//PrintSTR(String.Format("LINE: {0}; {1}; {2}; {3}; {4}", GetKompasObjStyle(obj), startP.X, startP.Y, endP.X, endP.Y));
@@ -317,14 +304,13 @@ public class NXJournal
 					if (obj is NXOpen.Arc) 
 					{
 						NXOpen.Arc arc = (NXOpen.Arc)obj;
+						//PrintSTR(String.Format("ARC: {0}; {1}; {2}; {3}; {4}; {5}; {6}", GetKompasObjStyle(obj), GetX(view, arc.CenterPoint), GetY(view, arc.CenterPoint), arc.Radius, arc.StartAngle, arc.EndAngle,    GetMatrixDirection(view.Matrix, arc.Matrix.Element)    ));
 						bNone = true;
 						NXOpen.Point3d centerP = convertCoord_CSYStoABS(ufs, arc.CenterPoint,   view.Matrix);
-						double StartAng = convertANG_ABStoCSYS(ufs, arc.StartAngle, view.Matrix, arc.Matrix.Element);
-						double EngAng = convertANG_ABStoCSYS(ufs, arc.EndAngle, view.Matrix, arc.Matrix.Element);
-						PrintSTR(String.Format("ARC: {0}; {1}; {2}; {3}; {4}; {5}; {6}", GetKompasObjStyle(obj), centerP.X, centerP.Y, arc.Radius, StartAng, EngAng,    GetMatrixDirection4(ufs, view.Matrix, arc.Matrix.Element)    ));
+						PrintSTR(String.Format("ARC: {0}; {1}; {2}; {3}; {4}; {5}; {6}", GetKompasObjStyle(obj), centerP.X, centerP.Y, arc.Radius, arc.StartAngle, arc.EndAngle,    GetMatrixDirection3(ufs, view.Matrix, arc.Matrix.Element)    ));
 PrintSTR(arc.Matrix.Element.ToString());
-//GetMatrixDirection4(ufs, arc.StartAngle, view.Matrix, arc.Matrix.Element);
-//GetMatrixDirection4(ufs, arc.EndAngle, view.Matrix, arc.Matrix.Element);
+GetMatrixDirection4(ufs, arc.StartAngle, view.Matrix, arc.Matrix.Element);
+GetMatrixDirection4(ufs, arc.EndAngle, view.Matrix, arc.Matrix.Element);
 //PrintSTR(GetMatrixDirection(view.Matrix, arc.Matrix.Element).ToString());
 					}
 					if (obj is NXOpen.Ellipse) 
@@ -349,7 +335,7 @@ CREATELIST: "Sheet 4"; 1189; 841				имя, длина, высота
 CREATEVIEW: "Front@23"; 0,01, 100, 200		имя, масштаб, начало вида X, начало вида Y
 Point: 1; 0; 0							'x,y
 LINE: 1, 100, 100, 200, 200				'стиль,x1,y1,x2,y2
-ARC: 1, 100, 100, 200, 200, 20, -1		'стиль,CenterX,CenterY,Radius,StartAngle,EndAngle,Direction
+ARC: 1, 100, 100, 200, 200, 20, -90		'стиль,CenterX,CenterY,Radius,StartAngle,EndAngle,Direction
 ELLIPSE: 1, 100, 100, 200, 200, 200, 20, -90	'стиль,CenterX,CenterY,MinorRadius,MajorRadius,StartAngle,EndAngle,Direction
 	*/				
 					
