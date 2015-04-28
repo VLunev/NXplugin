@@ -1,6 +1,4 @@
 ﻿// NX 9.0.3.4
-// Journal created by vlunev on Thu Dec 25 10:03:29 2014 RTZ 2 (зима)
-//
 using System;
 using System.IO;
 using NXOpen;
@@ -102,106 +100,13 @@ public class NXJournal
 		if (txtfile != null) txtfile.WriteLine(s);
 	}
 	
-	/*public static double GetX(NXOpen.Drawings.DraftingView view, Point3d p)
-	{
-		if (view.Matrix.Xx != 0) return p.X;
-		if (view.Matrix.Xy != 0) return p.Y;
-		if (view.Matrix.Xz != 0) return p.Z;
-		return 0;
-	}
-	
-	public static double GetY(NXOpen.Drawings.DraftingView view, Point3d p)
-	{
-		if (view.Matrix.Yx != 0) return p.X;
-		if (view.Matrix.Yy != 0) return p.Y;
-		if (view.Matrix.Yz != 0) return p.Z;
-		return 0;
-	}*/
-	
 	//Матрица поворота вида и матрица поворота дуги независимы друг от друга, и отсчитываются только от начальной системы координат
 	//=> угол поворота матрицы дуги относительно матрицы вида равен (матрица вида)*(обратная матрица дуги)
 	//http://matrixcalc.org/	- онлайн расчёт матриц
 	//http://blog2k.ru/archives/3197	- блок схема для определения поворота
 	//http://en.wikipedia.org/wiki/Rotation_matrix	- касательно матриц поворота (с примерами)
 	//http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation#Log_map_from_SO.283.29_to_so.283.29	- доп.материал
-	public static double GetMatrixDirection(NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
-	{
-		/*Один из вариантов можно использовать встроенные функции
-		double [] uf_viewM = convert_Matrix3x3_to_UFMatrix(viewM);
-		double [] uf_arcM  = convert_Matrix3x3_to_UFMatrix(arcM);
-		double [] uf_arcM_T = new double[9]; 
-		double [] uf_M = new double[9]; 
-		ufs.Mtx3.Transpose(uf_arcM, uf_arcM_T);
-		ufs.Mtx3.Multiply(uf_viewM, uf_arcM_T, uf_M);*/
-		
-		//считаем что nx нас не обманывает и определители матриц равны 1
-		//транспонируем матрицу дуги (обратное вращение)
-		NXOpen.Matrix3x3 arcMT = arcM;
-		arcMT.Xy = arcM.Yx;		arcMT.Yx = arcM.Xy;
-		arcMT.Xz = arcM.Zx;		arcMT.Zx = arcM.Xz;
-		arcMT.Yz = arcM.Zy;		arcMT.Zy = arcM.Yz;
-		//
-		//PrintSTR(arcMT.ToString());
-		//Умножение матрицы вида на транспонированную, получаем матрицу поворота вид->дуга
-		NXOpen.Matrix3x3 M = new NXOpen.Matrix3x3();
-		M.Xx = viewM.Xx * arcMT.Xx + viewM.Xy * arcMT.Yx + viewM.Xz * arcMT.Zx;
-		M.Xy = viewM.Xx * arcMT.Xy + viewM.Xy * arcMT.Yy + viewM.Xz * arcMT.Zy;
-		M.Xz = viewM.Xx * arcMT.Xz + viewM.Xy * arcMT.Yz + viewM.Xz * arcMT.Zz;
-
-		M.Yx = viewM.Yx * arcMT.Xx + viewM.Yy * arcMT.Yx + viewM.Yz * arcMT.Zx;
-		M.Yy = viewM.Yx * arcMT.Xy + viewM.Yy * arcMT.Yy + viewM.Yz * arcMT.Zy;
-		M.Yz = viewM.Yx * arcMT.Xz + viewM.Yy * arcMT.Yz + viewM.Yz * arcMT.Zz;
-
-		M.Zx = viewM.Zx * arcMT.Xx + viewM.Zy * arcMT.Yx + viewM.Zz * arcMT.Zx;
-		M.Zy = viewM.Zx * arcMT.Xy + viewM.Zy * arcMT.Yy + viewM.Zz * arcMT.Zy;
-		M.Zz = viewM.Zx * arcMT.Xz + viewM.Zy * arcMT.Yz + viewM.Zz * arcMT.Zz;
-		//
-		//PrintSTR(M.ToString());
-		//Вычисление "следа" матрицы  (Trace(M))
-		double traceM = M.Xx + M.Yy + M.Zz;
-		//Угол поворота
-		double ang = Math.Acos((traceM - 1)*0.5);
-		//PrintSTR(traceM.ToString());
-		//PrintSTR(ang.ToString());
-		//упрощение расчёта
-		double preCalc = 1/(2*Math.Sin(ang));
-		//вектор поворота
-		NXOpen.VectorArithmetic.Vector3 vAng = new NXOpen.VectorArithmetic.Vector3();
-		vAng.x = preCalc * (M.Yz - M.Zy);
-		vAng.y = preCalc * (M.Zx - M.Xz);
-		vAng.z = preCalc * (M.Xy - M.Yx);
-		//вектор оси Z вида
-		NXOpen.VectorArithmetic.Vector3 vView = new NXOpen.VectorArithmetic.Vector3(viewM.Zx, viewM.Zy, viewM.Zz);
-		//вектор оси Z дуги
-		NXOpen.VectorArithmetic.Vector3 vArc = new NXOpen.VectorArithmetic.Vector3(arcM.Zx, arcM.Zy, arcM.Zz);
-		
-		//Угол между осями Z  по формуле    скалярное произведение векторов разделить на умноженные длины векторов
-		double angZ = Math.Acos((vArc.x*vView.x + vArc.y*vView.y +vArc.z*vView.z)/(vArc.LengthSqr()*vView.LengthSqr()));
-		
-		if (angZ > 0.000001) ang = -ang;
-		return ang*180/Math.PI;
-	}
-	
-	public static double GetMatrixDirection3(UFSession ufs, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
-	{
-		//считаем что nx нас не обманывает и определители матриц равны 1
-		//считаем что вектор Z вида и вектор Z дуги 	коллинеарны
-		//=> угол между осью X (или Y) будет углом поворота, а за направление следует принять один из векторов Z
-		
-		double [] vecX_view = {viewM.Xx, viewM.Xy, viewM.Xz};
-		double [] vecX_arc  = {arcM.Xx,  arcM.Xy,  arcM.Xz};
-		double [] vecZ_view = {viewM.Zx, viewM.Zy, viewM.Zz};
-		double [] vecZ_arc  = {arcM.Zx,  arcM.Zy,  arcM.Zz};
-		double ang, angZ;
-		ufs.Vec3.AngleBetween(vecX_view, vecX_arc, vecZ_view, out ang);
-		ufs.Vec3.AngleBetween(vecZ_view, vecZ_arc, vecX_view, out angZ);
-		if (angZ > 0.000001) ang = -ang;
-		//PrintSTR(angZ.ToString());
-		//if (angZ < 0.000001) ang = 360 - ang; else ang = 
-		return ang*180/Math.PI;
-	}
-	
-	public static int GetMatrixDirection4(UFSession ufs, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление и угол (для дуг и элипсов)
+	public static int GetMatrixDirection4(UFSession ufs, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление
 	{
 		//считаем что nx нас не обманывает и определители матриц равны 1
 		//считаем что вектор Z вида и вектор Z дуги 	коллинеарны
@@ -220,21 +125,15 @@ public class NXJournal
 	{
 		double [] uf_viewM = convert_Matrix3x3_to_UFMatrix(viewM);
 		double [] uf_arcM  = convert_Matrix3x3_to_UFMatrix(arcM);
-		//double [] uf_arcM_T = new double[9]; 
-		//double [] uf_M = new double[9]; 
-		//ufs.Mtx3.Transpose(uf_arcM, uf_arcM_T);
-		//ufs.Mtx3.Multiply(uf_viewM, uf_arcM_T, uf_M);
 		
 		double [] model_pt = {Math.Cos(ang), Math.Sin(ang), 0};
 		double [] result = {0,0,0};
 		ufs.Mtx3.VecMultiplyT(model_pt, uf_arcM, result);
 		ufs.Mtx3.VecMultiply(result, uf_viewM, result);
-		//ufs.Mtx3.VecMultiply(result, uf_viewM, result);
 		//PrintSTR("x = " + result[0] + "\t\t Acos=" + Math.Acos(result[0])*180/Math.PI+ "\t Asin=" + Math.Asin(result[0])*180/Math.PI);
 		//PrintSTR("y = " + result[1] + "\t\t Acos=" + Math.Acos(result[1])*180/Math.PI+ "\t Asin=" + Math.Asin(result[1])*180/Math.PI);
 		//PrintSTR("z = " + result[2] + "\t\t Acos=" + Math.Acos(result[2])*180/Math.PI+ "\t Asin=" + Math.Asin(result[2])*180/Math.PI);
 		int znak = 1;
-		//if ((Math.Abs(Math.Acos(result[0]) - Math.Asin(result[1])) > 0.000001) && (Math.Abs(Math.Acos(result[0]) + Math.Asin(result[1]) - 180) < 0.000001)) znak = -1;			//в обратную сторону по тригонометрии
 		if (result[1] < 0) znak = -1;
 		return znak * Math.Acos(result[0]);
 	}
@@ -322,7 +221,7 @@ public class NXJournal
 						double StartAng = convertANG_ABStoCSYS(ufs, arc.StartAngle, view.Matrix, arc.Matrix.Element);
 						double EngAng = convertANG_ABStoCSYS(ufs, arc.EndAngle, view.Matrix, arc.Matrix.Element);
 						PrintSTR(String.Format("ARC: {0}; {1}; {2}; {3}; {4}; {5}; {6}", GetKompasObjStyle(obj), centerP.X, centerP.Y, arc.Radius, StartAng, EngAng,    GetMatrixDirection4(ufs, view.Matrix, arc.Matrix.Element)    ));
-PrintSTR(arc.Matrix.Element.ToString());
+//PrintSTR(arc.Matrix.Element.ToString());
 //GetMatrixDirection4(ufs, arc.StartAngle, view.Matrix, arc.Matrix.Element);
 //GetMatrixDirection4(ufs, arc.EndAngle, view.Matrix, arc.Matrix.Element);
 //PrintSTR(GetMatrixDirection(view.Matrix, arc.Matrix.Element).ToString());
@@ -331,7 +230,6 @@ PrintSTR(arc.Matrix.Element.ToString());
 					{
 						NXOpen.Ellipse ellipse = (NXOpen.Ellipse)obj;
 						NXOpen.Point3d centerP = convertCoord_CSYStoABS(ufs, ellipse.CenterPoint,   view.Matrix);
-						//PrintSTR(String.Format("ELLIPSE: {0}; {1}; {2}; {3}; {4}; {5}; {6}", GetKompasObjStyle(obj), GetX(view, ellipse.CenterPoint), GetY(view, ellipse.CenterPoint), ellipse.MinorRadius, ellipse.MajorRadius , ellipse.StartAngle, ellipse.EndAngle));
 						//PrintSTR(String.Format("ELLIPSE: {0}; {1}; {2}; {3}; {4}; {5}; {6}; {7}", GetKompasObjStyle(obj), centerP.X, centerP.Y, ellipse.MinorRadius, ellipse.MajorRadius , ellipse.StartAngle, ellipse.EndAngle,   GetMatrixDirection3(ufs, view.Matrix, ellipse.Matrix.Element)));
 						//PrintSTR(ellipse.Matrix.Element.ToString());
 						bNone = true;
@@ -353,17 +251,6 @@ ARC: 1, 100, 100, 200, 200, 20, -1		'стиль,CenterX,CenterY,Radius,StartAngl
 ELLIPSE: 1, 100, 100, 200, 200, 200, 20, -90	'стиль,CenterX,CenterY,MinorRadius,MajorRadius,StartAngle,EndAngle,Direction
 	*/				
 					
-					/*if (OBJs[i].GetType().Name == "Edge")
-					{
-						//OBJs[i].Blank();
-						//OBJs[i].Unhighlight();
-						//DraftingCurve  l;// = (DraftingCurve)OBJs[i];
-
-						ICurve ttt = (ICurve)OBJs[i];
-						lw.WriteLine("L = " + ttt.GetLength().ToString());
-						//break;
-					}*/
-
 			}
 	}
 	
