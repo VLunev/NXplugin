@@ -106,6 +106,7 @@ public class NXJournal
 	//http://blog2k.ru/archives/3197	- блок схема для определения поворота
 	//http://en.wikipedia.org/wiki/Rotation_matrix	- касательно матриц поворота (с примерами)
 	//http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation#Log_map_from_SO.283.29_to_so.283.29	- доп.материал
+	//http://www.viewmold.com/ug_html_files/ugopen_doc/uf_object_types/uf_object_types_ref1.html
 	public static int GetMatrixDirection4(UFSession ufs, NXOpen.Matrix3x3 viewM, NXOpen.Matrix3x3 arcM)		//Направление
 	{
 		//считаем что nx нас не обманывает и определители матриц равны 1
